@@ -94,11 +94,19 @@ app.use(errorHandler);
 // ─── Start Server ─────────────────────────────────────────
 const start = async () => {
   await connectDB();
-  await connectRedis();
+
+  // Skip Redis connection when disabled or no host/URL provided (avoids ECONNREFUSED on Render)
+  const redisDisabled = process.env.DISABLE_REDIS === 'true';
+  const hasRedisConfig = !!(process.env.REDIS_HOST || process.env.REDIS_URL || process.env.REDIS_PORT);
+  if (!redisDisabled && hasRedisConfig) {
+    await connectRedis();
+  } else {
+    logger.info('⚠️ Skipping Redis connection (DISABLE_REDIS=' + process.env.DISABLE_REDIS + ', REDIS_HOST/URL present=' + hasRedisConfig + ')');
+  }
+
   initFirebase();
   initSocket(io);
 
-  // ─── Start Server ─────────────────────────────────────────
   const PORT = process.env.PORT || 8000;
   httpServer.listen(PORT, () => {
     logger.info(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
