@@ -8,7 +8,7 @@ const connectRedis = async () => {
     redisClient = createClient({
       socket: {
         host: process.env.REDIS_HOST || 'localhost',
-        port: process.env.REDIS_PORT || 6380,
+        port: parseInt(process.env.REDIS_PORT, 10) || 6379, // changed default to 6379
       },
       password: process.env.REDIS_PASSWORD || undefined,
     });
@@ -19,6 +19,7 @@ const connectRedis = async () => {
     await redisClient.connect();
   } catch (error) {
     logger.error('❌ Redis connection failed:', error.message);
+    // don't throw — continue without Redis (features degrade)
   }
 };
 

@@ -92,10 +92,23 @@ app.use(notFound);
 app.use(errorHandler);
 
 // ─── Start Server ─────────────────────────────────────────
-const PORT = process.env.PORT || 8000;
-httpServer.listen(PORT, () => {
-  logger.info(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
-  logger.info(`📚 API Docs available at http://localhost:${PORT}/api-docs`);
+const start = async () => {
+  await connectDB();
+  await connectRedis();
+  initFirebase();
+  initSocket(io);
+
+  // ─── Start Server ─────────────────────────────────────────
+  const PORT = process.env.PORT || 8000;
+  httpServer.listen(PORT, () => {
+    logger.info(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+    logger.info(`📚 API Docs available at http://localhost:${PORT}/api-docs`);
+  });
+};
+
+start().catch((err) => {
+  logger.error('Startup failure:', err);
+  process.exit(1);
 });
 
 module.exports = { app, io };
